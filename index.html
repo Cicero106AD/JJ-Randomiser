@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F6F2">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Kata Randomiser</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjNkI0Q0E4Ii8+PHRleHQgeD0iOTAiIHk9IjEyMCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSIgZm9udC1zaXplPSI5MCIgZm9udC13ZWlnaHQ9IjUwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+SzwvdGV4dD48L3N2Zz4=">
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface-alt: #EFEDE6;
+    --text: #1A1A1A;
+    --text-muted: #5F5E5A;
+    --text-hint: #888780;
+    --border: rgba(0,0,0,0.15);
+    --border-strong: rgba(0,0,0,0.3);
+    --accent: #6B4CA8;
+    --accent-bg: #EEEDFE;
+    --accent-text: #3C3489;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1A1A1A;
+      --surface: #2A2A2A;
+      --surface-alt: #222;
+      --text: #F0F0F0;
+      --text-muted: #A0A0A0;
+      --text-hint: #707070;
+      --border: rgba(255,255,255,0.15);
+      --border-strong: rgba(255,255,255,0.3);
+      --accent: #9F97E5;
+      --accent-bg: #3C3489;
+      --accent-text: #EEEDFE;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  h1 { font-size: 22px; font-weight: 500; margin: 0; }
+  p { margin: 0; }
+
+  button {
+    font-family: var(--font);
+    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-strong);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.05s;
+    -webkit-appearance: none;
+  }
+  button:hover { background: var(--surface-alt); }
+  button:active { transform: scale(0.98); }
+
+  input[type="text"] {
+    font-family: var(--font);
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    -webkit-appearance: none;
+    width: 100%;
+  }
+  input[type="text"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--text);
+    border: none;
+    cursor: pointer;
+  }
+
+  #app-shell {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .kr-frame {
+    padding: 18px;
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+    transition: border-color 0.2s, background 0.2s, padding 0.2s;
+  }
+  .kr-frame-solid {
+    border: 5mm solid var(--kr-belt, var(--border));
+  }
+  .kr-frame-split {
+    border: 5mm solid var(--kr-belt, var(--border));
+    box-shadow: inset 0 0 0 4px var(--bg);
+    padding: 22px;
+  }
+
+  button.kr-belt-chip {
+    text-align: left;
+    position: relative;
+    padding-left: 34px;
+  }
+  button.kr-belt-chip::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    background: var(--kr-chip, #888);
+    border: 0.5px solid var(--border-strong);
+  }
+  button.kr-belt-chip.kr-split::before {
+    background: linear-gradient(to right, var(--kr-chip, #888) 0 50%, #ffffff 50% 100%);
+  }
+
+  .card-link {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .card-link:hover { background: var(--surface-alt); }
+
+  .move-card {
+    background: var(--surface-alt);
+    border-radius: var(--radius-lg);
+    padding: 40px 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .move-pill {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    border: 0.5px solid var(--border);
+  }
+  .move-name {
+    font-size: 30px;
+    font-weight: 500;
+    margin: 0;
+    word-wrap: break-word;
+  }
+</style>
+</head>
+<body>
+<div id="app-shell">
+  <div id="app"></div>
+</div>
+
+<script>
+(function() {
+  // ----- Belt catalogue -----
+  const BELTS = [
+    { name: "White",            color: "#F5F5F1", split: false, textOnColor: "#2C2C2A" },
+    { name: "Yellow",           color: "#F2C94C", split: false, textOnColor: "#5A3A00" },
+    { name: "Orange",           color: "#E8823A", split: false, textOnColor: "#4A1B0C" },
+    { name: "Green",            color: "#3B8A3B", split: false, textOnColor: "#FFFFFF" },
+    { name: "Blue and White",   color: "#2F6FB8", split: true,  textOnColor: "#FFFFFF" },
+    { name: "Blue",             color: "#2F6FB8", split: false, textOnColor: "#FFFFFF" },
+    { name: "Purple and White", color: "#6B4CA8", split: true,  textOnColor: "#FFFFFF" },
+    { name: "Purple",           color: "#6B4CA8", split: false, textOnColor: "#FFFFFF" },
+    { name: "Brown and White",  color: "#6B4A2B", split: true,  textOnColor: "#FFFFFF" },
+    { name: "Brown",            color: "#6B4A2B", split: false, textOnColor: "#FFFFFF" },
+    { name: "Black Belt",       color: "#1A1A1A", split: false, textOnColor: "#FFFFFF" }
+  ];
+  const BELT_NAMES = BELTS.map(b => b.name);
+  const BELT_BY_NAME = Object.fromEntries(BELTS.map(b => [b.name, b]));
+
+  const STORAGE_KEY = "kata_randomiser_v1";
+
+  function defaultMoves() {
+    const data = {};
+    BELT_NAMES.forEach(b => {
+      data[b] = Array.from({ length: 10 }, (_, i) => "Move " + (i + 1));
+    });
+    return data;
+  }
+
+  // ----- Persistence -----
+  function loadPersisted() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { moves: defaultMoves(), recent: [] };
+      const parsed = JSON.parse(raw);
+      // Ensure all belts exist even if stored data is older
+      const moves = defaultMoves();
+      if (parsed.moves) {
+        BELT_NAMES.forEach(b => {
+          if (Array.isArray(parsed.moves[b])) moves[b] = parsed.moves[b];
+        });
+      }
+      return {
+        moves: moves,
+        recent: Array.isArray(parsed.recent) ? parsed.recent : []
+      };
+    } catch (e) {
+      return { moves: defaultMoves(), recent: [] };
+    }
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        moves: state.moves,
+        recent: state.recent
+      }));
+    } catch (e) { /* storage full or disabled, fail silently */ }
+  }
+
+  const persisted = loadPersisted();
+
+  const state = {
+    screen: "menu",
+    moves: persisted.moves,
+    selectedBelt: null,
+    includedBelts: [],
+    sessionCount: 10,
+    sequence: [],
+    current: 0,
+    editingBelt: null,
+    recent: persisted.recent
+  };
+
+  const root = document.getElementById("app");
+
+  // ----- Helpers -----
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function key(item) { return item.belt + "||" + item.move; }
+
+  function buildSession(pool, count) {
+    if (pool.length === 0) return [];
+    const recentSet = new Set(state.recent);
+    const fresh = pool.filter(p => !recentSet.has(key(p)));
+    const stale = pool.filter(p =>  recentSet.has(key(p)));
+    const shuffled = shuffle(fresh).concat(shuffle(stale));
+    const catalogueSize = BELT_NAMES.reduce((s, b) => s + state.moves[b].length, 0);
+    const memCap = Math.max(5, Math.round(catalogueSize * 0.2));
+    const picked = shuffled.slice(0, Math.min(count, pool.length));
+    picked.forEach(p => state.recent.push(key(p)));
+    while (state.recent.length > memCap) state.recent.shift();
+    persist();
+    return picked;
+  }
+
+  function el(tag, attrs, children) {
+    const node = document.createElement(tag);
+    if (attrs) {
+      for (const k in attrs) {
+        if (k === "style") node.setAttribute("style", attrs[k]);
+        else if (k === "class") node.className = attrs[k];
+        else if (k.startsWith("on") && typeof attrs[k] === "function") node[k] = attrs[k];
+        else if (attrs[k] !== null && attrs[k] !== undefined) node.setAttribute(k, attrs[k]);
+      }
+    }
+    (children || []).forEach(c => {
+      if (c == null) return;
+      if (typeof c === "string") node.appendChild(document.createTextNode(c));
+      else node.appendChild(c);
+    });
+    return node;
+  }
+
+  function frame(beltName, innerChildren) {
+    const wrap = el("div", { class: "kr-frame kr-frame-solid" });
+    if (beltName) {
+      const b = BELT_BY_NAME[beltName];
+      wrap.className = "kr-frame " + (b.split ? "kr-frame-split" : "kr-frame-solid");
+      wrap.style.setProperty("--kr-belt", b.color);
+    } else {
+      wrap.style.setProperty("--kr-belt", "var(--border)");
+    }
+    innerChildren.forEach(c => wrap.appendChild(c));
+    return wrap;
+  }
+
+  function render() {
+    root.innerHTML = "";
+    if (state.screen === "menu") return renderMenu();
+    if (state.screen === "shuffle_setup") return renderShuffleSetup();
+    if (state.screen === "cross_setup") return renderCrossSetup();
+    if (state.screen === "play") return renderPlay();
+    if (state.screen === "edit_belts") return renderEditBelts();
+    if (state.screen === "edit_belt") return renderEditBelt();
+  }
+
+  // ----- Menu -----
+  function renderMenu() {
+    const title = el("h1", { style: "margin: 0 0 4px;" }, ["Kata randomiser"]);
+    const sub = el("p", { style: "font-size: 14px; color: var(--text-muted); margin: 0 0 20px;" }, ["Pick a mode to start."]);
+
+    const card1 = el("div", {
+      class: "card-link",
+      onclick: () => { state.screen = "shuffle_setup"; state.selectedBelt = null; render(); }
+    }, [
+      el("p", { style: "font-size: 16px; font-weight: 500; margin: 0 0 4px;" }, ["Shuffle within one belt"]),
+      el("p", { style: "font-size: 13px; color: var(--text-muted); margin: 0;" }, ["Pick a belt, choose how many moves, go."])
+    ]);
+
+    const card2 = el("div", {
+      class: "card-link",
+      onclick: () => { state.screen = "cross_setup"; state.includedBelts = BELT_NAMES.slice(); render(); }
+    }, [
+      el("p", { style: "font-size: 16px; font-weight: 500; margin: 0 0 4px;" }, ["Randomise across belts"]),
+      el("p", { style: "font-size: 13px; color: var(--text-muted); margin: 0;" }, ["Pick which belts to include, mix it up."])
+    ]);
+
+    const grid = el("div", { style: "display: grid; gap: 12px;" }, [card1, card2]);
+
+    const editBtn = el("button", {
+      style: "margin-top: 16px; width: 100%;",
+      onclick: () => { state.screen = "edit_belts"; render(); }
+    }, ["Edit move names"]);
+
+    const memInfo = state.recent.length > 0
+      ? el("p", { style: "font-size: 12px; color: var(--text-hint); margin: 12px 0 0; text-align: center;" }, ["Remembering last " + state.recent.length + " moves — won't repeat them soon."])
+      : null;
+
+    const resetBtn = state.recent.length > 0
+      ? el("button", {
+          style: "margin-top: 8px; width: 100%; font-size: 12px;",
+          onclick: () => { state.recent = []; persist(); render(); }
+        }, ["Clear no-repeat memory"])
+      : null;
+
+    const page = frame(null, [title, sub, grid, editBtn, memInfo, resetBtn].filter(Boolean));
+    root.appendChild(page);
+  }
+
+  // ----- Shuffle setup -----
+  function renderShuffleSetup() {
+    const header = renderHeader("Shuffle within one belt");
+
+    const beltLabel = el("p", { style: "font-size: 13px; font-weight: 500; margin: 0 0 8px; color: var(--text-muted);" }, ["1. Pick a belt"]);
+    const beltGrid = el("div", { style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin-bottom: 20px;" });
+
+    BELTS.forEach(b => {
+      const selected = state.selectedBelt === b.name;
+      const btn = el("button", {
+        class: "kr-belt-chip" + (b.split ? " kr-split" : ""),
+        style: "--kr-chip: " + b.color + "; " + (selected ? "background: var(--accent-bg); border-color: var(--accent); color: var(--accent-text);" : ""),
+        onclick: () => { state.selectedBelt = b.name; render(); }
+      }, [b.name + " (" + state.moves[b.name].length + ")"]);
+      beltGrid.appendChild(btn);
+    });
+
+    const countLabel = el("p", { style: "font-size: 13px; font-weight: 500; margin: 0 0 8px; color: var(--text-muted);" }, ["2. How many moves this session?"]);
+
+    const maxForBelt = state.selectedBelt ? state.moves[state.selectedBelt].length : 10;
+    if (state.sessionCount > maxForBelt) state.sessionCount = maxForBelt;
+    if (state.sessionCount < 1) state.sessionCount = 1;
+
+    const countWrap = el("div", { style: "display: flex; align-items: center; gap: 12px; margin-bottom: 20px;" });
+    const slider = el("input", {
+      type: "range",
+      min: "1",
+      max: String(Math.max(1, maxForBelt)),
+      step: "1",
+      value: String(state.sessionCount),
+      style: "flex: 1;",
+      oninput: (e) => {
+        state.sessionCount = parseInt(e.target.value, 10);
+        document.getElementById("count-out").textContent = state.sessionCount;
+      }
+    });
+    const out = el("span", { id: "count-out", style: "font-size: 16px; font-weight: 500; min-width: 28px; text-align: right;" }, [String(state.sessionCount)]);
+    countWrap.appendChild(slider);
+    countWrap.appendChild(out);
+
+    const startBtn = el("button", {
+      style: "width: 100%;" + (!state.selectedBelt ? "opacity: 0.5;" : ""),
+      onclick: () => {
+        if (!state.selectedBelt) return;
+        const pool = state.moves[state.selectedBelt].map(m => ({ move: m, belt: state.selectedBelt }));
+        state.sequence = buildSession(pool, state.sessionCount);
+        state.current = 0;
+        state.screen = "play";
+        render();
+      }
+    }, [state.selectedBelt ? "Start (" + state.sessionCount + " moves)" : "Pick a belt first"]);
+
+    const page = frame(state.selectedBelt, [header, beltLabel, beltGrid, countLabel, countWrap, startBtn]);
+    root.appendChild(page);
+  }
+
+  // ----- Cross-belt setup -----
+  function renderCrossSetup() {
+    const header = renderHeader("Randomise across belts");
+    const tip = el("p", { style: "font-size: 13px; color: var(--text-muted); margin: 0 0 12px;" }, ["Tap to include or exclude a belt."]);
+
+    const beltGrid = el("div", { style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin-bottom: 12px;" });
+
+    BELTS.forEach(b => {
+      const included = state.includedBelts.includes(b.name);
+      const btn = el("button", {
+        class: "kr-belt-chip" + (b.split ? " kr-split" : ""),
+        style: "--kr-chip: " + b.color + "; " + (included ? "background: var(--accent-bg); border-color: var(--accent); color: var(--accent-text);" : ""),
+        onclick: () => {
+          if (included) state.includedBelts = state.includedBelts.filter(x => x !== b.name);
+          else state.includedBelts = state.includedBelts.concat([b.name]);
+          render();
+        }
+      }, [b.name + " (" + state.moves[b.name].length + ")"]);
+      beltGrid.appendChild(btn);
+    });
+
+    const toggleRow = el("div", { style: "display: flex; gap: 8px; margin-bottom: 20px;" }, [
+      el("button", {
+        style: "flex: 1;",
+        onclick: () => { state.includedBelts = BELT_NAMES.slice(); render(); }
+      }, ["Select all"]),
+      el("button", {
+        style: "flex: 1;",
+        onclick: () => { state.includedBelts = []; render(); }
+      }, ["Clear"])
+    ]);
+
+    const totalAvailable = state.includedBelts.reduce((sum, b) => sum + state.moves[b].length, 0);
+    if (state.sessionCount > totalAvailable && totalAvailable > 0) state.sessionCount = totalAvailable;
+    if (state.sessionCount < 1) state.sessionCount = 1;
+
+    const countLabel = el("p", { style: "font-size: 13px; font-weight: 500; margin: 0 0 8px; color: var(--text-muted);" }, ["How many moves? (" + totalAvailable + " available)"]);
+
+    const countWrap = el("div", { style: "display: flex; align-items: center; gap: 12px; margin-bottom: 20px;" });
+    const slider = el("input", {
+      type: "range",
+      min: "1",
+      max: String(Math.max(1, totalAvailable)),
+      step: "1",
+      value: String(state.sessionCount),
+      style: "flex: 1;",
+      disabled: totalAvailable === 0 ? "disabled" : null,
+      oninput: (e) => {
+        state.sessionCount = parseInt(e.target.value, 10);
+        document.getElementById("count-out").textContent = state.sessionCount;
+      }
+    });
+    const out = el("span", { id: "count-out", style: "font-size: 16px; font-weight: 500; min-width: 28px; text-align: right;" }, [String(state.sessionCount)]);
+    countWrap.appendChild(slider);
+    countWrap.appendChild(out);
+
+    const canStart = totalAvailable > 0 && state.includedBelts.length > 0;
+    const startBtn = el("button", {
+      style: "width: 100%;" + (!canStart ? "opacity: 0.5;" : ""),
+      onclick: () => {
+        if (!canStart) return;
+        const pool = [];
+        state.includedBelts.forEach(b => {
+          state.moves[b].forEach(m => pool.push({ move: m, belt: b }));
+        });
+        state.sequence = buildSession(pool, state.sessionCount);
+        state.current = 0;
+        state.screen = "play";
+        render();
+      }
+    }, [canStart ? "Start (" + state.sessionCount + " moves)" : "Pick at least one belt"]);
+
+    const page = frame(null, [header, tip, beltGrid, toggleRow, countLabel, countWrap, startBtn]);
+    root.appendChild(page);
+  }
+
+  // ----- Play -----
+  function renderPlay() {
+    const header = renderHeader("Session");
+    const item = state.sequence[state.current];
+    const isLast = state.current >= state.sequence.length - 1;
+    const belt = BELT_BY_NAME[item.belt];
+
+    const progress = el("p", { style: "font-size: 13px; color: var(--text-muted); margin: 0 0 20px; text-align: center;" }, ["Move " + (state.current + 1) + " of " + state.sequence.length]);
+
+    const pill = el("span", {
+      class: "move-pill",
+      style: "background: " + belt.color + "; color: " + belt.textOnColor + ";"
+    }, [belt.name]);
+
+    const card = el("div", { class: "move-card" }, [
+      pill,
+      el("p", { class: "move-name" }, [item.move])
+    ]);
+
+    const nextLabel = isLast ? "Finish" : "Next move";
+    const nextBtn = el("button", {
+      style: "width: 100%; padding: 14px; font-size: 16px;",
+      onclick: () => {
+        if (isLast) {
+          state.screen = "menu";
+          state.sequence = [];
+          state.current = 0;
+        } else {
+          state.current += 1;
+        }
+        render();
+      }
+    }, [nextLabel]);
+
+    const page = frame(item.belt, [header, progress, card, nextBtn]);
+    root.appendChild(page);
+  }
+
+  // ----- Edit belts list -----
+  function renderEditBelts() {
+    const header = renderHeader("Edit move names");
+    const tip = el("p", { style: "font-size: 13px; color: var(--text-muted); margin: 0 0 12px;" }, ["Pick a belt to rename, add, or remove moves."]);
+
+    const list = el("div", { style: "display: grid; gap: 8px;" });
+    BELTS.forEach(b => {
+      const row = el("button", {
+        class: "kr-belt-chip" + (b.split ? " kr-split" : ""),
+        style: "--kr-chip: " + b.color + "; display: flex; justify-content: space-between; align-items: center; text-align: left; width: 100%;",
+        onclick: () => { state.editingBelt = b.name; state.screen = "edit_belt"; render(); }
+      }, [
+        el("span", { style: "font-size: 14px;" }, [b.name]),
+        el("span", { style: "font-size: 13px; color: var(--text-muted);" }, [state.moves[b.name].length + " moves →"])
+      ]);
+      list.appendChild(row);
+    });
+
+    const page = frame(null, [header, tip, list]);
+    root.appendChild(page);
+  }
+
+  // ----- Edit single belt -----
+  function renderEditBelt() {
+    const b = state.editingBelt;
+    const header = renderHeader(b);
+
+    const back = el("button", {
+      style: "margin-bottom: 12px;",
+      onclick: () => { state.screen = "edit_belts"; render(); }
+    }, ["← Back to belts"]);
+
+    const list = el("div", { style: "display: grid; gap: 6px; margin-bottom: 12px;" });
+    state.moves[b].forEach((m, idx) => {
+      const row = el("div", { style: "display: flex; gap: 6px; align-items: center;" });
+      const input = el("input", {
+        type: "text",
+        value: m,
+        style: "flex: 1;",
+        oninput: (e) => { state.moves[b][idx] = e.target.value; persist(); }
+      });
+      const del = el("button", {
+        style: "padding: 10px 14px;",
+        onclick: () => { state.moves[b].splice(idx, 1); persist(); render(); }
+      }, ["×"]);
+      row.appendChild(input);
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+
+    const addBtn = el("button", {
+      style: "width: 100%;",
+      onclick: () => {
+        state.moves[b].push("Move " + (state.moves[b].length + 1));
+        persist();
+        render();
+      }
+    }, ["+ Add move"]);
+
+    const page = frame(b, [back, header, list, addBtn]);
+    root.appendChild(page);
+  }
+
+  // ----- Shared header -----
+  function renderHeader(titleText) {
+    const wrap = el("div", { style: "display: flex; justify-content: space-between; align-items: center; margin: 0 0 16px; gap: 12px;" });
+    const title = el("h1", { style: "font-size: 20px; font-weight: 500; margin: 0; flex: 1;" }, [titleText]);
+    const menuBtn = el("button", {
+      onclick: () => {
+        state.screen = "menu";
+        state.sequence = [];
+        state.current = 0;
+        render();
+      }
+    }, ["Menu"]);
+    wrap.appendChild(title);
+    wrap.appendChild(menuBtn);
+    return wrap;
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
